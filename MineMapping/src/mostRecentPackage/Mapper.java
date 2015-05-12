@@ -20,8 +20,8 @@ import lejos.nxt.comm.Bluetooth;
 
 public class Mapper {
 	
-	static int rotateIncrementL = 90;
-	static int rotateIncrementR = 90;
+	static int rotateIncrementL = 270;
+	static int rotateIncrementR = 270;
 	
 	static NXTRegulatedMotor rightMotor = Motor.B;
 	static NXTRegulatedMotor leftMotor = Motor.C;
@@ -36,64 +36,87 @@ public class Mapper {
 		DataInputStream dis;
 		DataOutputStream dos;
 		
-		RemoteDevice btrd = Bluetooth.getKnownDevice(name);
-		if (btrd == null) {
-			LCD.clear();
-			LCD.drawString("No such device", 0, 0);
-			Button.waitForAnyPress();
-			System.exit(1);
-		}
+//		RemoteDevice btrd = Bluetooth.getKnownDevice(name);
+//		if (btrd == null) {
+//			LCD.clear();
+//			LCD.drawString("No such device", 0, 0);
+//			Button.waitForAnyPress();
+////			System.exit(1);
+//		}
+//
+//		BTConnection btc = Bluetooth.connect(btrd);
+//
+//		if (btc == null) {
+//			LCD.clear();
+//			LCD.drawString("Connect fail", 0, 0);
+//			Button.waitForAnyPress();
+////			System.exit(1);
+//		}
 
-		BTConnection btc = Bluetooth.connect(btrd);
-
-		if (btc == null) {
-			LCD.clear();
-			LCD.drawString("Connect fail", 0, 0);
-			Button.waitForAnyPress();
-			System.exit(1);
-		}
-
-		LCD.clear();
-		LCD.drawString("Connected", 0, 0);
-		dis = btc.openDataInputStream();
-		dos = btc.openDataOutputStream();
+//		LCD.clear();
+//		LCD.drawString("Connected", 0, 0);
+//		dis = btc.openDataInputStream();
+//		dos = btc.openDataOutputStream();
 		
 		boolean turnLeft = false;
+		boolean turnRight = false;
 		
 		int counter = 0;
 		String dataReading="";
 		
 		while(true)
 		{
+			//Store distances on left and in front.
 			int frontData = frontSensor.getDistance();
 			int leftData = leftSensor.getDistance();
 			
-			
+			//Turn both motors forward 90 degrees.
 			rightMotor.rotate(rotateIncrementR, true);
 			leftMotor.rotate(rotateIncrementL, false);
 			
-			if(Math.abs(leftSensor.getDistance() - leftData) > 10)
+			//After the robot moves, check left distance again.
+			if(leftSensor.getDistance() - leftData > 15)
 			{
+				//If new distance is 10 units greater than previous reading, turn left.
 				turnLeft = true;
+				turnRight = false;
 				leftMotor.rotate(-180, true);
 				rightMotor.rotate(180, false);
+		 frontData = frontSensor.getDistance();
+				 leftData = leftSensor.getDistance();
 			}
-			if(frontData < 3)
+			if(frontSensor.getDistance() < 10)
 			{
+				if(leftSensor.getDistance() - leftData > 10)
+				{
+					//If new distance is 10 units greater than previous reading, turn left.
+					turnLeft = true;
+					turnRight = false;
+					leftMotor.rotate(-180, true);
+					rightMotor.rotate(180, false);
+					 frontData = frontSensor.getDistance();
+					 leftData = leftSensor.getDistance();
+				}
+				
+				else{
 				leftMotor.rotate(180, true);
 				rightMotor.rotate(-180, false);
-				turnLeft = true;
+				turnLeft = false;
+				turnRight = true;
+				 frontData = frontSensor.getDistance();
+				 leftData = leftSensor.getDistance();}
 			}
 			
-			dataReading = ""+counter+","+leftData+","+frontData+","+turnLeft+"\n";
+			dataReading = ""+counter+","+leftData+","+frontData+","+turnLeft+","+turnRight+"\n";
 			turnLeft = false;
-			try {
-				dos.write(dataReading.getBytes());
-				dos.flush();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			turnRight = true;
+//			try {
+//				dos.write(dataReading.getBytes());
+//				dos.flush();
+//				
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 		}
 
 	}
