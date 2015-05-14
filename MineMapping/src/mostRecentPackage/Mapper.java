@@ -1,4 +1,5 @@
 package mostRecentPackage;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -17,108 +18,98 @@ import lejos.nxt.UltrasonicSensor;
 import lejos.nxt.comm.BTConnection;
 import lejos.nxt.comm.Bluetooth;
 
-
 public class Mapper {
-	
+
 	static int rotateIncrementL = 270;
 	static int rotateIncrementR = 270;
-	
+
 	static NXTRegulatedMotor rightMotor = Motor.B;
 	static NXTRegulatedMotor leftMotor = Motor.C;
-	
+
 	static UltrasonicSensor frontSensor = new UltrasonicSensor(SensorPort.S1);
 	static UltrasonicSensor leftSensor = new UltrasonicSensor(SensorPort.S2);
-	
+
 	static String name = "Group 1";
+	static boolean stop = false;
 
-	public static void main(String[] args) throws FileNotFoundException {
-		
-		DataInputStream dis;
-		DataOutputStream dos;
-		
-//		RemoteDevice btrd = Bluetooth.getKnownDevice(name);
-//		if (btrd == null) {
-//			LCD.clear();
-//			LCD.drawString("No such device", 0, 0);
-//			Button.waitForAnyPress();
-////			System.exit(1);
-//		}
-//
-//		BTConnection btc = Bluetooth.connect(btrd);
-//
-//		if (btc == null) {
-//			LCD.clear();
-//			LCD.drawString("Connect fail", 0, 0);
-//			Button.waitForAnyPress();
-////			System.exit(1);
-//		}
-
-//		LCD.clear();
-//		LCD.drawString("Connected", 0, 0);
-//		dis = btc.openDataInputStream();
-//		dos = btc.openDataOutputStream();
-		
+	public static void main(String[] args) throws IOException {
+		FileOutputStream fos = new FileOutputStream(new File("data.dat"));
+		DataOutputStream bbw = new DataOutputStream(fos);
 		boolean turnLeft = false;
 		boolean turnRight = false;
-		
+
 		int counter = 0;
-		String dataReading="";
-		
-		while(true)
-		{
-			//Store distances on left and in front.
+		String dataReading = "";
+Thread t1=new Thread(new StopThread());
+t1.start();
+		while (!stop) {
+			// Store distances on left and in front.
 			int frontData = frontSensor.getDistance();
 			int leftData = leftSensor.getDistance();
-			
-			//Turn both motors forward 90 degrees.
+
+			// Turn both motors forward 90 degrees.
 			rightMotor.rotate(rotateIncrementR, true);
 			leftMotor.rotate(rotateIncrementL, false);
-			
-			//After the robot moves, check left distance again.
-			if(leftSensor.getDistance() - leftData > 15)
-			{
-				//If new distance is 10 units greater than previous reading, turn left.
+
+			// After the robot moves, check left distance again.
+			if (leftSensor.getDistance() - leftData > 15) {
+				// If new distance is 10 units greater than previous reading,
+				// turn left.
 				turnLeft = true;
 				turnRight = false;
+				leftMotor.rotate(150, true);
+				rightMotor.rotate(150, false);
 				leftMotor.rotate(-180, true);
 				rightMotor.rotate(180, false);
-		 frontData = frontSensor.getDistance();
-				 leftData = leftSensor.getDistance();
+				frontData = frontSensor.getDistance();
+				leftData = leftSensor.getDistance();
 			}
-			if(frontSensor.getDistance() < 10)
-			{
-				if(leftSensor.getDistance() - leftData > 10)
-				{
-					//If new distance is 10 units greater than previous reading, turn left.
+			if (frontSensor.getDistance() < 17) {
+				if (leftSensor.getDistance() - leftData > 10) {
+					// If new distance is 10 units greater than previous
+					// reading, turn left.
 					turnLeft = true;
 					turnRight = false;
+					leftMotor.rotate(150, true);
+					rightMotor.rotate(150, false);
 					leftMotor.rotate(-180, true);
 					rightMotor.rotate(180, false);
-					 frontData = frontSensor.getDistance();
-					 leftData = leftSensor.getDistance();
+					frontData = frontSensor.getDistance();
+					leftData = leftSensor.getDistance();
 				}
-				
-				else{
-				leftMotor.rotate(180, true);
-				rightMotor.rotate(-180, false);
-				turnLeft = false;
-				turnRight = true;
-				 frontData = frontSensor.getDistance();
-				 leftData = leftSensor.getDistance();}
+
+				else {
+					leftMotor.rotate(180, true);
+					rightMotor.rotate(-180, false);
+					turnLeft = false;
+					turnRight = true;
+					frontData = frontSensor.getDistance();
+					leftData = leftSensor.getDistance();
+				}
 			}
-			
-			dataReading = ""+counter+","+leftData+","+frontData+","+turnLeft+","+turnRight+"\n";
+
+			dataReading = "" + counter + "," + leftData + "," + frontData + ","
+					+ turnLeft + "," + turnRight + "\n";
+			bbw.writeChars(dataReading);
+			bbw.flush();
+
 			turnLeft = false;
 			turnRight = true;
-//			try {
-//				dos.write(dataReading.getBytes());
-//				dos.flush();
-//				
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
+
+		}
+		bbw.close();
+		System.exit(0);
+	}
+
+	private static class StopThread implements Runnable {
+
+		@Override
+		public void run() {
+			if (Button.waitForAnyPress() == Button.ID_ENTER) {
+				stop = true;
+			}
+
 		}
 
 	}
-
 }
