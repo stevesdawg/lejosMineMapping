@@ -33,6 +33,7 @@ public class Mapper {
 	static boolean stop = false;
 
 	public static void main(String[] args) throws IOException {
+		if (Button.waitForAnyPress() == Button.ID_RIGHT);
 		FileOutputStream fos = new FileOutputStream(new File("data.dat"));
 		DataOutputStream bbw = new DataOutputStream(fos);
 		boolean turnLeft = false;
@@ -50,6 +51,7 @@ t1.start();
 			// Turn both motors forward 90 degrees.
 			rightMotor.rotate(rotateIncrementR, true);
 			leftMotor.rotate(rotateIncrementL, false);
+			dataReading="forward\n";
 
 			// After the robot moves, check left distance again.
 			if (leftSensor.getDistance() - leftData > 15) {
@@ -63,6 +65,7 @@ t1.start();
 				rightMotor.rotate(180, false);
 				frontData = frontSensor.getDistance();
 				leftData = leftSensor.getDistance();
+				dataReading="leftTurn\n";
 			}
 			if (frontSensor.getDistance() < 17) {
 				if (leftSensor.getDistance() - leftData > 10) {
@@ -76,6 +79,7 @@ t1.start();
 					rightMotor.rotate(180, false);
 					frontData = frontSensor.getDistance();
 					leftData = leftSensor.getDistance();
+					dataReading="leftTurn\n";
 				}
 
 				else {
@@ -85,14 +89,14 @@ t1.start();
 					turnRight = true;
 					frontData = frontSensor.getDistance();
 					leftData = leftSensor.getDistance();
+					dataReading="rightTurn\n";
 				}
 			}
 
-			dataReading = "" + counter + "," + leftData + "," + frontData + ","
-					+ turnLeft + "," + turnRight + "\n";
+			
 			bbw.writeChars(dataReading);
 			bbw.flush();
-
+dataReading="";
 			turnLeft = false;
 			turnRight = true;
 
